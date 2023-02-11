@@ -13,12 +13,15 @@ import {
   RetirementIndexInfo,
   RetirementIndexInfoResult,
   RetirementsTotalsAndBalances,
-  RetirementTotals,
 } from "../../types/offset";
 
 export const createRetirementStorageContract = (
   provider: providers.JsonRpcProvider
 ) => getContract({ contractName: "retirementStorage", provider });
+
+export const createRetirementAggregatorV2Contract = (
+  provider: providers.JsonRpcProvider
+) => getContract({ contractName: "retirementAggregatorV2", provider });
 
 export const getRetirementIndexInfo = async (params: {
   beneficiaryAddress: string;
@@ -29,14 +32,15 @@ export const getRetirementIndexInfo = async (params: {
     const provider = getStaticProvider({
       infuraId: params.infuraId,
     });
-    const storageContract = createRetirementStorageContract(provider);
+    const retirementAggregatorV2 =
+      createRetirementAggregatorV2Contract(provider);
 
     const [
       tokenAddress,
       amount,
       beneficiaryName,
       retirementMessage,
-    ]: RetirementIndexInfo = await storageContract.getRetirementIndexInfo(
+    ]: RetirementIndexInfo = await retirementAggregatorV2.getRetirementDetails(
       params.beneficiaryAddress,
       BigNumber.from(params.index)
     );
@@ -73,45 +77,53 @@ export const getRetirementTotalsAndBalances = async (params: {
     const provider = getStaticProvider({
       infuraId: params.infuraId,
     });
-    const retirementStorageContract = createRetirementStorageContract(provider);
+    const retirementAggregatorV2 =
+      createRetirementAggregatorV2Contract(provider);
 
     const promises: [
-      RetirementTotals,
+      BigNumber,
+      BigNumber,
+      BigNumber,
       BigNumber,
       BigNumber,
       BigNumber,
       BigNumber,
       BigNumber
     ] = [
-      retirementStorageContract.getRetirementTotals(params.address),
-      retirementStorageContract.getRetirementPoolInfo(
+      retirementAggregatorV2.getTotalRetirements(params.address),
+      retirementAggregatorV2.getTotalCarbonRetired(params.address),
+      retirementAggregatorV2.getTotalRewardsClaimed(params.address),
+      retirementAggregatorV2.getTotalPoolRetired(
         params.address,
         addresses["mainnet"].bct
       ),
-      retirementStorageContract.getRetirementPoolInfo(
+      retirementAggregatorV2.getTotalPoolRetired(
         params.address,
         addresses["mainnet"].mco2
       ),
-      retirementStorageContract.getRetirementPoolInfo(
+      retirementAggregatorV2.getTotalPoolRetired(
         params.address,
         addresses["mainnet"].nct
       ),
-      retirementStorageContract.getRetirementPoolInfo(
+      retirementAggregatorV2.getTotalPoolRetired(
         params.address,
         addresses["mainnet"].ubo
       ),
-      retirementStorageContract.getRetirementPoolInfo(
+      retirementAggregatorV2.getTotalPoolRetired(
         params.address,
         addresses["mainnet"].nbo
       ),
     ];
-    const [totals, bct, mco2, nct, ubo, nbo] = await Promise.all(promises);
-
     const [
       totalRetirements,
       totalTonnesRetired,
       totalTonnesClaimedForNFTS,
-    ]: RetirementTotals = totals;
+      bct,
+      mco2,
+      nct,
+      ubo,
+      nbo,
+    ] = await Promise.all(promises);
 
     return {
       totalRetirements: totalRetirements.toString(),

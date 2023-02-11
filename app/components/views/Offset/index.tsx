@@ -85,7 +85,7 @@ export const Offset = (props: Props) => {
   const allowances = useTypedSelector((state) =>
     selectAllowancesWithParams(state, {
       tokens: offsetInputTokens,
-      spender: "retirementAggregator",
+      spender: "retirementAggregatorV2",
     })
   );
 
@@ -267,7 +267,7 @@ export const Offset = (props: Props) => {
       if (!props.provider || paymentMethod === "fiat") return;
 
       const token = paymentMethod;
-      const spender = "retirementAggregator";
+      const spender = "retirementAggregatorV2";
 
       const approvedValue = await changeApprovalTransaction({
         value: getApprovalValue(),
@@ -809,7 +809,7 @@ export const Offset = (props: Props) => {
           }
           onCloseModal={closeTransactionModal}
           token={paymentMethod}
-          spender={"retirementAggregator"}
+          spender={"retirementAggregatorV2"}
           value={cost.toString()}
           approvalValue={getApprovalValue()}
           status={fullStatus}
